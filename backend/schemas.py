@@ -1,40 +1,45 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import List, Optional
 
+# --- USUÁRIO SCHEMA ---
 class UsuarioBase(BaseModel):
-    """
-    Classe base para outros schemas relacionados a usuários, contendo apenas o campo de e-mail.
-    """
     email: EmailStr
 
 class UsuarioCreate(UsuarioBase):
-    """
-    Schema utilizado para criação de um novo usuário (input de cadastro).
-    """
     nome: str
     senha: str
 
 class UsuarioLogin(UsuarioBase):
-    """
-    Schema utilizado para login do usuário (input de autenticação).
-    """
     senha: str
 
+# --- TÓPICO SCHEMA ---
+class TopicoBase(BaseModel):
+    titulo: str
+    conteudo: str
+
+class TopicoCreate(TopicoBase):
+    pass  # NÃO inclui mais autor_id, pois será atribuído no backend via usuário autenticado
+
+class TopicoResponse(TopicoBase):
+    id: int
+    data_criacao: datetime
+    autor_id: int
+
+    class Config:
+        from_attributes = True
+
+# --- USUÁRIO SCHEMA ---
 class UsuarioResponse(UsuarioBase):
-    """
-    Schema de resposta ao cliente contendo todas as informações do usuário (output para frontend/API).
-    """
     id: int
     nome: str
     data_criacao: datetime
     ativo: bool
+    topicos: List[TopicoResponse] = []
 
     class Config:
         from_attributes = True
 
 class Token(BaseModel):
-    """
-    Schema para os dados do token de autenticação retornado pela API.
-    """
     access_token: str
     token_type: str

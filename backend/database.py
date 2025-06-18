@@ -26,3 +26,5 @@ def get_db():
         yield db        # Entrega a sessão para quem chamou (exemplo: uma rota do FastAPI)
     finally:
         db.close()      # Garante que a sessão será fechada ao fim da requisição
+        
+        

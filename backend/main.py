@@ -1,97 +1,116 @@
-from datetime import timedelta  # Importa timedelta para controle de expiração do token
-from fastapi import FastAPI, Depends, HTTPException, status  # Importa FastAPI e utilitários de dependências/Exceções
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm  # Importa classes de segurança OAuth2
-from sqlalchemy.orm import Session  # Importa a sessão do ORM do SQLAlchemy
-from fastapi.middleware.cors import CORSMiddleware  # Importa o middleware de CORS do FastAPI
+from datetime import timedelta  
+from fastapi import FastAPI, HTTPException, status, Query, Depends   
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm  
+from sqlalchemy.orm import Session  
+from fastapi.middleware.cors import CORSMiddleware  
+from sqlalchemy.orm import selectinload
 
-from . import models, schemas, auth, database  # Importa módulos locais: modelos, schemas, autenticação e banco
+from . import models, schemas, auth, database
 
-# Criação do banco de dados e tabelas (apenas para desenvolvimento inicial)
-database.Base.metadata.create_all(bind=database.engine)  # Cria as tabelas no banco se ainda não existirem
+database.Base.metadata.create_all(bind=database.engine)
 
-app = FastAPI()  # Instancia o aplicativo FastAPI
+app = FastAPI()
 
-# Definição dos domínios/origens permitidos para CORS (exemplo: front-end local)
 origins = [
-    "http://localhost:3000",  # Porta padrão do React dev server
-    "http://localhost:5173",  # Porta padrão do Vite dev server
-    # Adicione aqui a URL de deploy do seu frontend em produção
+    "http://localhost:3000",
+    "http://localhost:5173",
 ]
 
-# Adiciona o middleware CORS para permitir requisições de outros domínios (ex: frontend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,        # Lista de origens permitidas que podem acessar a API
-    allow_credentials=True,       # Permite envio de cookies/autenticação via CORS
-    allow_methods=["*"],          # Permite todos os métodos HTTP (GET, POST, etc.)
-    allow_headers=["*"],          # Permite todos os headers nas requisições
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Configura o esquema OAuth2 para autenticação usando tokens Bearer
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # tokenUrl define a rota de obtenção do token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+# --------------------
+# Registro de usuário
+# --------------------
 @app.post("/register", response_model=schemas.UsuarioResponse)
 def register_user(user: schemas.UsuarioCreate, db: Session = Depends(database.get_db)):
-    """
-    Rota para registrar um novo usuário no sistema.
-    Recebe os dados do usuário, verifica se o e-mail já está cadastrado,
-    cria uma nova entrada na tabela de usuários e retorna os dados do usuário criado.
-    """
-    db_user = db.query(models.Usuario).filter(models.Usuario.email == user.email).first()  # Busca usuário pelo e-mail
+    db_user = db.query(models.Usuario).filter(models.Usuario.email == user.email).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email já registrado")  # Email já existe na base
+        raise HTTPException(status_code=400, detail="Email já registrado")
+    hashed_password = auth.get_password_hash(user.senha)
+    db_user = models.Usuario(nome=user.nome, email=user.email, senha_hash=hashed_password)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    db_user = db.query(models.Usuario).options(selectinload(models.Usuario.topicos)).filter(models.Usuario.id == db_user.id).first()
+    return db_user
 
-    hashed_password = auth.get_password_hash(user.senha)  # Gera hash da senha recebida
-    db_user = models.Usuario(nome=user.nome, email=user.email, senha_hash=hashed_password)  # Instancia novo usuário
-    db.add(db_user)   # Adiciona usuário na sessão do banco
-    db.commit()       # Salva as alterações no banco
-    db.refresh(db_user)  # Atualiza db_user com dados gerados no banco, como o ID
-    return db_user    # Retorna usuário cadastrado
-
+# --------------------
+# Login e token
+# --------------------
 @app.post("/token", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
-    """
-    Rota para autenticação de usuário e geração do token de acesso.
-    Recebe as credenciais do usuário, valida e retorna um token JWT caso os dados estejam corretos.
-    """
-    user = db.query(models.Usuario).filter(models.Usuario.email == form_data.username).first()  # Busca usuário pelo e-mail
+    user = db.query(models.Usuario).filter(models.Usuario.email == form_data.username).first()
     if not user or not auth.verify_password(form_data.password, user.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciais inválidas",
             headers={"WWW-Authenticate": "Bearer"},
-        )  # Usuário não existe ou senha incorreta
-
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)  # Define tempo de expiração do token
+        )
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
         data={"sub": user.email},
         expires_delta=access_token_expires
-    )  # Gera o token JWT
-    return {"access_token": access_token, "token_type": "bearer"}  # Retorna o token para o cliente
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
+# --------------------
+# Listar dados do usuário logado
+# --------------------
 @app.get("/users/me", response_model=schemas.UsuarioResponse)
 def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
-    """
-    Retorna dados do usuário logado, usando o token JWT enviado no header da requisição.
-    Decodifica o token, valida e busca o usuário no banco de dados.
-    """
-    payload = auth.decode_access_token(token)  # Decodifica o token JWT
+    payload = auth.decode_access_token(token)
     if payload is None:
-        raise HTTPException(status_code=401, detail="Token inválido")  # Token inválido
-
-    email: str = payload.get("sub")  # Pega o e-mail armazenado no token
+        raise HTTPException(status_code=401, detail="Token inválido")
+    email: str = payload.get("sub")
     if email is None:
-        raise HTTPException(status_code=401, detail="Token inválido")  # Token sem e-mail
-
-    user = db.query(models.Usuario).filter(models.Usuario.email == email).first()  # Busca usuário pelo e-mail
+        raise HTTPException(status_code=401, detail="Token inválido")
+    user = db.query(models.Usuario).options(selectinload(models.Usuario.topicos)).filter(models.Usuario.email == email).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")  # Usuário não existe
-    return user  # Retorna dados do usuário autenticado
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return user
 
+# --------------------
+# Adiconando tópico 
+# --------------------
+@app.post("/topicos/", response_model=schemas.TopicoResponse)
+def criar_topico(topico: schemas.TopicoCreate, db: Session = Depends(database.get_db), usuario: models.Usuario = Depends(auth.get_current_user)):
+    novo_topico = models.Topico(
+        titulo=topico.titulo,
+        conteudo=topico.conteudo,
+        autor_id=usuario.id,  # <-- pegue o id do usuário autenticado!
+    )
+    db.add(novo_topico)
+    db.commit()
+    db.refresh(novo_topico)
+    return novo_topico
+
+# --------------------
+# Listar TODOS os tópicos 
+# --------------------
+@app.get("/topicos/", response_model=list[schemas.TopicoResponse])
+def listar_topicos(db: Session = Depends(database.get_db)):
+    topicos = db.query(models.Topico).all()
+    return topicos
+
+# --------------------
+# Buscar tópicos por parte do título
+# --------------------
+@app.get("/topicos/search", response_model=list[schemas.TopicoResponse])
+def buscar_topicos_por_titulo(query: str = Query(..., min_length=1), db: Session = Depends(database.get_db)):
+    topicos = db.query(models.Topico).filter(models.Topico.titulo.ilike(f"%{query}%")).all()
+    return topicos
+
+# --------------------
+# Healthcheck
+# --------------------
 @app.get("/health")
 def health_check():
-    """
-    Endpoint para checagem de saúde da API. 
-    Útil para monitoramento e verificações rápidas.
-    """
     return {"status": "healthy", "message": "API do Fórum funcionando corretamente"}
