@@ -1,0 +1,12 @@
+#Aplique o dowload e intalação de todas as depencias, caso seja necessário inicializar o código novamente.
+#pip install -r backend/requirements.txt
+
+fastapi
+uvicorn
+sqlalchemy
+pymysql
+python-multipart
+bcrypt
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
