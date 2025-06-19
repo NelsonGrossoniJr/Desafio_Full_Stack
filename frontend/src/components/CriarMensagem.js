@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import BuscarTopicos from "./BuscarTopicos";
+import { criarMensagem } from "../requisicoes/CriarMensagemBackEnd";
+import "../styles/CriarMensagem.css";
 
 function CriarMensagem({ onNovaMensagem }) {
   const [topico, setTopico] = useState(null);
@@ -12,30 +14,24 @@ function CriarMensagem({ onNovaMensagem }) {
     setCarregando(true);
     setMsg("");
     try {
-      const resp = await fetch("http://localhost:8000/mensagens/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          conteudo,
-          topico_id: topico.id,
-        }),
-      });
-      if (!resp.ok) throw new Error();
+      const token = localStorage.getItem("token");
+      await criarMensagem({ conteudo, topico_id: topico.id, token });
       setMsg("Mensagem enviada!");
       setConteudo("");
       if (onNovaMensagem) onNovaMensagem();
-    } catch {
-      setMsg("Falha ao enviar mensagem.");
+    } catch (err) {
+      if (err.status === 401) {
+        setMsg("Login expirado, entre novamente.");
+      } else {
+        setMsg("Falha ao enviar mensagem.");
+      }
     } finally {
       setCarregando(false);
     }
   }
 
   return (
-    <div>
+    <div className="criar-mensagem-container">
       {!topico ? (
         <>
           <h4>Escolha o tópico para sua mensagem:</h4>
@@ -43,25 +39,34 @@ function CriarMensagem({ onNovaMensagem }) {
         </>
       ) : (
         <>
-          <div>
+          <div className="topico-selecionado">
             <strong>Tópico selecionado:</strong> {topico.titulo}
-            <button onClick={() => setTopico(null)} style={{ marginLeft: 8 }}>
+            <button
+              type="button"
+              onClick={() => setTopico(null)}
+              className="btn-trocar"
+            >
               (trocar)
             </button>
           </div>
-          <form onSubmit={handleEnviar}>
+          <form onSubmit={handleEnviar} className="form-mensagem">
             <textarea
               placeholder="Digite sua mensagem"
               value={conteudo}
               onChange={(e) => setConteudo(e.target.value)}
               required
+              className="textarea-mensagem"
             />
             <br />
-            <button type="submit" disabled={carregando || !conteudo}>
+            <button
+              type="submit"
+              disabled={carregando || !conteudo}
+              className="btn-enviar"
+            >
               Enviar
             </button>
           </form>
-          <p>{msg}</p>
+          <p className="mensagem-status">{msg}</p>
         </>
       )}
     </div>

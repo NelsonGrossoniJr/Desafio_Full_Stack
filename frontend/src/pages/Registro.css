@@ -1,0 +1,68 @@
+.registro-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 44px;
+}
+
+.registro-title {
+  font-size: 2rem;
+  margin-bottom: 22px;
+  color: #1b2343;
+  text-align: center;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 300px;
+  width: 100%;
+  gap: 12px;
+  background: #fafbfc;
+  padding: 28px 22px;
+  border-radius: 10px;
+  box-shadow: 0 3px 18px rgba(60, 60, 90, 0.1);
+}
+
+.registro-form input {
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid #ababab;
+  border-radius: 5px;
+  outline: none;
+  transition: border 0.15s;
+}
+
+.registro-form input:focus {
+  border: 1.5px solid #286fe6;
+}
+
+.registro-btn {
+  padding: 10px 0;
+  background-color: #286fe6;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+
+.registro-btn:hover {
+  background-color: #1857b1;
+}
+
+.registro-msg {
+  margin-top: 12px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.registro-msg.sucesso {
+  color: #169221;
+}
+
+.registro-msg.erro {
+  color: #eb2d2d;
+}

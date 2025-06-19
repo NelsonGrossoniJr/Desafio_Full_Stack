@@ -1,0 +1,64 @@
+/* Estilo para o tópico selecionado */
+.topico-selecionado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Botão para trocar de tópico */
+.btn-trocar {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.95em;
+  padding: 0;
+}
+
+/* Remove o focus feio do botão */
+.btn-trocar:focus {
+  outline: none;
+}
+
+/* Formulário da mensagem */
+.form-mensagem {
+  margin-top: 12px;
+}
+
+/* Textarea estilizada */
+.textarea-mensagem {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  font-size: 1em;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+
+/* Botão enviar */
+.btn-enviar {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background-color: #0b5ed7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-enviar:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Mensagem de status (feedback para o usuário) */
+.mensagem-status {
+  margin-top: 10px;
+  font-size: 0.98em;
+  color: #555;
+}

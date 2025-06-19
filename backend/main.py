@@ -85,7 +85,8 @@ def criar_topico(topico: schemas.TopicoCreate, db: Session = Depends(database.ge
     novo_topico = models.Topico(
         titulo=topico.titulo,
         conteudo=topico.conteudo,
-        autor_id=usuario.id,  # <-- pegue o id do usuário autenticado!
+        categoria=topico.categoria,            
+        autor_id=usuario.id,
     )
     db.add(novo_topico)
     db.commit()
@@ -101,22 +102,36 @@ def listar_topicos(db: Session = Depends(database.get_db)):
     return topicos
 
 # --------------------
-# Buscar tópicos por parte do título
+# Buscar tópicos por parte do título (limitando a 10 resultados)
 # --------------------
 @app.get("/topicos/search", response_model=list[schemas.TopicoResponse])
 def buscar_topicos_por_titulo(query: str = Query(..., min_length=1), db: Session = Depends(database.get_db)):
-    topicos = db.query(models.Topico).filter(models.Topico.titulo.ilike(f"%{query}%")).all()
+    topicos = (
+        db.query(models.Topico)
+        .filter(models.Topico.titulo.ilike(f"%{query}%"))
+        .limit(10)  
+        .all()
+    )
     return topicos
 
 # --------------------
-# Healthcheck
+# Buscar tópicos por parte da categoria (limitando a 10 resultados)
 # --------------------
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "message": "API do Fórum funcionando corretamente"}
+@app.get("/topicos/search_categoria", response_model=list[schemas.TopicoResponse])
+def buscar_topicos_por_categoria(
+    query: str = Query(..., min_length=1),
+    db: Session = Depends(database.get_db)
+):
+    topicos = (
+        db.query(models.Topico)
+        .filter(models.Topico.categoria.ilike(f"%{query}%"))
+        .limit(10)  
+        .all()
+    )
+    return topicos
 
 # --------------------------------------------------
-# NOVA ROTA: Adicionar mensagem (POST /mensagens/)
+# Adicionar mensagem 
 # --------------------------------------------------
 @app.post("/mensagens/", response_model=schemas.MensagemResponse, status_code=201)
 def criar_mensagem(
@@ -138,3 +153,56 @@ def criar_mensagem(
     db.commit()
     db.refresh(nova_mensagem)
     return nova_mensagem
+
+# --------------------------------------------------
+# Listar todas as mensagens
+# --------------------------------------------------
+@app.get("/mensagens/", response_model=list[schemas.MensagemResponse])
+def listar_mensagens(db: Session = Depends(database.get_db)):
+    mensagens = db.query(models.Mensagem).all()
+    return mensagens
+
+
+# --------------------------------------------------
+# Buscar mensagens por parte do conteudo (limitando a 10 resultados)
+# --------------------------------------------------
+@app.get("/mensagens/search", response_model=list[schemas.MensagemResponse])
+def buscar_mensagens_por_conteudo(
+    query: str = Query(..., min_length=1),
+    db: Session = Depends(database.get_db)
+):
+    mensagens = (
+        db.query(models.Mensagem)
+        .filter(models.Mensagem.conteudo.ilike(f"%{query}%"))
+        .limit(10)
+        .all()
+    )
+    return mensagens
+
+# --------------------------------------------------
+# Buscar mensagens por topico (limitando a 10 resultados)
+# --------------------------------------------------
+
+
+@app.get("/mensagens-por-topico/", response_model=list[schemas.MensagemResponse])
+def get_mensagens_por_topico(nome_topico: str, db: Session = Depends(database.get_db)):
+    # Busca exata ignorando caixa e acento (por causa da collation)
+    topico = db.query(models.Topico).filter(
+        models.Topico.titulo.ilike(nome_topico)
+    ).first()  # só um resultado!
+
+    if not topico:
+        raise HTTPException(status_code=404, detail="Tópico não encontrado")
+
+    # Busca todas as mensagens desse tópico
+    mensagens = db.query(models.Mensagem).filter(
+        models.Mensagem.topico_id == topico.id
+    ).all()
+
+    return mensagens
+# --------------------
+# Healthcheck
+# --------------------
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "message": "API do Fórum funcionando corretamente"}

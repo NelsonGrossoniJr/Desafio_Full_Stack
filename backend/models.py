@@ -21,8 +21,9 @@ class Topico(Base):
     __tablename__ = "topicos"
 
     id = Column(Integer, primary_key=True, index=True)
-    titulo = Column(String(255), nullable=False)
-    conteudo = Column(Text, nullable=False)
+    titulo = Column(String(100), nullable=False)
+    conteudo = Column(String(255), nullable=False)
+    categoria = Column(String(100), nullable=True)  # ou False, se for obrigatório
     data_criacao = Column(DateTime(timezone=True), server_default=func.now())
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
 

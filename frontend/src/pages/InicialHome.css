@@ -1,0 +1,33 @@
+.inicial-home-container {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.inicial-home-title {
+  font-size: 2rem;
+  color: #1b2343;
+  margin-bottom: 32px;
+}
+
+.inicial-home-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.inicial-home-btn {
+  padding: 10px 26px;
+  background-color: #286fe6;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.16s;
+  outline: none;
+}
+
+.inicial-home-btn:hover {
+  background-color: #1857b1;
+}

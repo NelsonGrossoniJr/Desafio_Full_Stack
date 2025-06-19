@@ -1,63 +1,49 @@
 import React, { useState } from "react";
+import { criarTopico } from "../requisicoes/CriarTopicoBackEnd";
+import "../styles/CriarTopico.css";
 
 const CriarTopico = ({ onSucesso }) => {
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
+  const [categoria, setCategoria] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [mensagemErro, setMensagemErro] = useState("");
   const [mensagemSucesso, setMensagemSucesso] = useState("");
 
-  async function criarTopico(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setMensagemErro("");
     setMensagemSucesso("");
     setCarregando(true);
 
     const token = localStorage.getItem("token");
-    const url = "http://localhost:8000/topicos/";
-    const payload = { titulo, conteudo };
-
     try {
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+      const novoTopico = await criarTopico({
+        titulo,
+        conteudo,
+        categoria,
+        token,
       });
-
-      if (!resp.ok) {
-        const erro = await resp.json();
-        throw new Error(erro.detail || "Erro ao criar tópico");
-      }
-
-      const novoTopico = await resp.json();
       setMensagemSucesso("Tópico criado com sucesso!");
       setTitulo("");
       setConteudo("");
-
-      if (onSucesso) onSucesso(novoTopico); // Apenas para atualização de lista, não para fechar o modal!
+      setCategoria("");
+      if (onSucesso) onSucesso(novoTopico);
     } catch (error) {
-      setMensagemErro(error.message);
+      if (error.status === 401) {
+        setMensagemErro("Login expirado, entre novamente.");
+      } else {
+        setMensagemErro(error.message);
+      }
     } finally {
       setCarregando(false);
     }
   }
 
   return (
-    <form
-      onSubmit={criarTopico}
-      style={{
-        maxWidth: 500,
-        margin: "0 auto",
-        padding: 16,
-        border: "1px solid #ccc",
-        borderRadius: 8,
-      }}
-    >
+    <form onSubmit={handleSubmit} className="criar-topico-form">
       <h2>Criar Novo Tópico</h2>
-      <div>
+      <div className="form-group">
         <label>
           Título:
           <br />
@@ -66,12 +52,12 @@ const CriarTopico = ({ onSucesso }) => {
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             required
-            style={{ width: "100%" }}
+            className="input-full"
             disabled={carregando}
           />
         </label>
       </div>
-      <div style={{ marginTop: 8 }}>
+      <div className="form-group">
         <label>
           Conteúdo:
           <br />
@@ -80,7 +66,20 @@ const CriarTopico = ({ onSucesso }) => {
             onChange={(e) => setConteudo(e.target.value)}
             required
             rows={4}
-            style={{ width: "100%" }}
+            className="input-full"
+            disabled={carregando}
+          />
+        </label>
+      </div>
+      <div className="form-group">
+        <label>
+          Categoria:
+          <br />
+          <input
+            type="text"
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+            className="input-full"
             disabled={carregando}
           />
         </label>
@@ -88,15 +87,13 @@ const CriarTopico = ({ onSucesso }) => {
       <button
         type="submit"
         disabled={carregando || !titulo || !conteudo}
-        style={{ marginTop: 12 }}
+        className="btn-submit"
       >
         {carregando ? "Enviando..." : "Criar Tópico"}
       </button>
-      {mensagemErro && (
-        <div style={{ color: "red", marginTop: 10 }}>{mensagemErro}</div>
-      )}
+      {mensagemErro && <div className="mensagem-erro">{mensagemErro}</div>}
       {mensagemSucesso && (
-        <div style={{ color: "green", marginTop: 10 }}>{mensagemSucesso}</div>
+        <div className="mensagem-sucesso">{mensagemSucesso}</div>
       )}
     </form>
   );

@@ -1,5 +1,6 @@
-#Aplique o dowload e intalação de todas as depencias, caso seja necessário inicializar o código novamente.
+#Aplique o dowload e intalação de todas as depencias, caso seja necessário inicializar o código novamente em outra máquina.
 #pip install -r backend/requirements.txt
+#by: nelson
 
 fastapi
 uvicorn

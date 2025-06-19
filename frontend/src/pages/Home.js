@@ -3,32 +3,43 @@ import BuscarTopicos from "../components/BuscarTopicos";
 import CriarTopico from "../components/CriarTopico";
 import Modal from "../components/Modal";
 import CriarMensagem from "../components/CriarMensagem";
+import BuscarMensagens from "../components/BuscarMensagens";
+import "./Home.css";
 
-function Home({ onLogout, usuarioLogado }) {
+function Home({ onLogout }) {
   const [modalAbertoTopico, setModalAbertoTopico] = useState(false);
   const [modalAbertoMensagem, setModalAbertoMensagem] = useState(false);
 
   return (
-    <div>
-      <h1>
-        Bem-vindo{usuarioLogado?.nome ? `, ${usuarioLogado.nome}` : ""} à Home!
-      </h1>
+    <div className="home-container">
+      <h1 className="home-title">Bem-vindo à Home!</h1>
 
-      <button onClick={() => setModalAbertoTopico(true)}>Criar tópico</button>
+      <div className="home-actions">
+        <button className="home-btn" onClick={() => setModalAbertoTopico(true)}>
+          Criar tópico
+        </button>
+        <button
+          className="home-btn"
+          onClick={() => setModalAbertoMensagem(true)}
+        >
+          Criar Mensagem
+        </button>
+        <button className="home-btn home-btn-logout" onClick={onLogout}>
+          Logout
+        </button>
+      </div>
+
       <Modal
         isOpen={modalAbertoTopico}
         onClose={() => setModalAbertoTopico(false)}
       >
         <CriarTopico
           onSucesso={() => {
-            /* aqui você pode recarregar a lista, se precisar */
+            /* recarregar lista se quiser */
           }}
         />
       </Modal>
 
-      <button onClick={() => setModalAbertoMensagem(true)}>
-        Criar Mensagem
-      </button>
       <Modal
         isOpen={modalAbertoMensagem}
         onClose={() => setModalAbertoMensagem(false)}
@@ -36,9 +47,10 @@ function Home({ onLogout, usuarioLogado }) {
         <CriarMensagem onNovoTopico={() => setModalAbertoMensagem(false)} />
       </Modal>
 
-      <BuscarTopicos />
-
-      <button onClick={onLogout}>Logout</button>
+      <div className="home-listas">
+        <BuscarTopicos selecionavel={false} />
+        <BuscarMensagens selecionavel={false} />
+      </div>
     </div>
   );
 }
