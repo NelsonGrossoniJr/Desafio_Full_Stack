@@ -114,3 +114,27 @@ def buscar_topicos_por_titulo(query: str = Query(..., min_length=1), db: Session
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "message": "API do Fórum funcionando corretamente"}
+
+# --------------------------------------------------
+# NOVA ROTA: Adicionar mensagem (POST /mensagens/)
+# --------------------------------------------------
+@app.post("/mensagens/", response_model=schemas.MensagemResponse, status_code=201)
+def criar_mensagem(
+    mensagem: schemas.MensagemCreate,
+    db: Session = Depends(database.get_db),
+    usuario: models.Usuario = Depends(auth.get_current_user)
+):
+    # Checa se tópico existe antes
+    topico = db.query(models.Topico).filter(models.Topico.id == mensagem.topico_id).first()
+    if not topico:
+        raise HTTPException(status_code=404, detail="Tópico não encontrado")
+
+    nova_mensagem = models.Mensagem(
+        conteudo=mensagem.conteudo,
+        topico_id=mensagem.topico_id,
+        usuario_id=usuario.id  
+    )
+    db.add(nova_mensagem)
+    db.commit()
+    db.refresh(nova_mensagem)
+    return nova_mensagem

@@ -15,6 +15,7 @@ class Usuario(Base):
     ativo = Column(Boolean, default=True, index=True)
 
     topicos = relationship("Topico", back_populates="autor")
+    mensagens = relationship("Mensagem", back_populates="autor")   # <-- ADICIONADO
 
 class Topico(Base):
     __tablename__ = "topicos"
@@ -26,3 +27,16 @@ class Topico(Base):
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
 
     autor = relationship("Usuario", back_populates="topicos")
+    mensagens = relationship("Mensagem", back_populates="topico")  # <-- ADICIONADO
+
+class Mensagem(Base):
+    __tablename__ = "mensagens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conteudo = Column(Text, nullable=False)
+    data_criacao = Column(DateTime, default=func.now())
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    topico_id = Column(Integer, ForeignKey("topicos.id"), nullable=False)
+
+    autor = relationship("Usuario", back_populates="mensagens")
+    topico = relationship("Topico", back_populates="mensagens")

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const CriarTopico = ({ onNovoTopico }) => {
+const CriarTopico = ({ onSucesso }) => {
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -13,7 +13,7 @@ const CriarTopico = ({ onNovoTopico }) => {
     setMensagemSucesso("");
     setCarregando(true);
 
-    const token = localStorage.getItem("token"); // Use a forma de armazenamento do seu app!
+    const token = localStorage.getItem("token");
     const url = "http://localhost:8000/topicos/";
     const payload = { titulo, conteudo };
 
@@ -36,7 +36,8 @@ const CriarTopico = ({ onNovoTopico }) => {
       setMensagemSucesso("Tópico criado com sucesso!");
       setTitulo("");
       setConteudo("");
-      if (onNovoTopico) onNovoTopico(novoTopico);
+
+      if (onSucesso) onSucesso(novoTopico); // Apenas para atualização de lista, não para fechar o modal!
     } catch (error) {
       setMensagemErro(error.message);
     } finally {
@@ -56,7 +57,6 @@ const CriarTopico = ({ onNovoTopico }) => {
       }}
     >
       <h2>Criar Novo Tópico</h2>
-
       <div>
         <label>
           Título:
@@ -71,7 +71,6 @@ const CriarTopico = ({ onNovoTopico }) => {
           />
         </label>
       </div>
-
       <div style={{ marginTop: 8 }}>
         <label>
           Conteúdo:
@@ -86,7 +85,6 @@ const CriarTopico = ({ onNovoTopico }) => {
           />
         </label>
       </div>
-
       <button
         type="submit"
         disabled={carregando || !titulo || !conteudo}
@@ -94,7 +92,6 @@ const CriarTopico = ({ onNovoTopico }) => {
       >
         {carregando ? "Enviando..." : "Criar Tópico"}
       </button>
-
       {mensagemErro && (
         <div style={{ color: "red", marginTop: 10 }}>{mensagemErro}</div>
       )}

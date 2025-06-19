@@ -13,7 +13,7 @@ from . import database, models
 # Configurações de segurança
 SECRET_KEY = "1234-1234-1234-1234"        # Chave secreta para assinar/validar tokens JWT 
 ALGORITHM = "HS256"                   # Algoritmo para assinatura do JWT
-ACCESS_TOKEN_EXPIRE_MINUTES = 5          # Expiração padrão do token em minutos
+ACCESS_TOKEN_EXPIRE_MINUTES = 15          # Expiração padrão do token em minutos
 
 # ---- AUTH utils ----
 
@@ -44,7 +44,7 @@ def decode_access_token(token: str):
 
 # ---- Adicional para rotas autenticadas ----
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),

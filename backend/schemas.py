@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 # --- USUÁRIO SCHEMA ---
 class UsuarioBase(BaseModel):
@@ -43,3 +43,19 @@ class UsuarioResponse(UsuarioBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    
+# --- MENSAGEM SCHEMA ---
+class MensagemBase(BaseModel):
+    conteudo: str
+
+class MensagemCreate(MensagemBase):
+    topico_id: int  # Ao criar, o usuário autenticado já está associado, só precisa informar o tópico
+
+class MensagemResponse(MensagemBase):
+    id: int
+    data_criacao: datetime
+    usuario_id: int
+    topico_id: int
+
+    class Config:
+        from_attributes = True
