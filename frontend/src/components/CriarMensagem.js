@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import BuscarTopicos from "./BuscarTopicos";
 import { criarMensagem } from "../requisicoes/CriarMensagemBackEnd";
 import "../styles/CriarMensagem.css";
+import CriarTopico from "./CriarTopico";
 
 function CriarMensagem({ onNovaMensagem }) {
+  const [modalAberto, setModalAberto] = useState(false);
   const [topico, setTopico] = useState(null);
   const [conteudo, setConteudo] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -30,46 +32,85 @@ function CriarMensagem({ onNovaMensagem }) {
     }
   }
 
+  function fecharModal() {
+    setModalAberto(false);
+    // Limpa estados ao fechar, se quiser
+    setTopico(null);
+    setMsg("");
+    setConteudo("");
+  }
+
+  // Função para lidar com cliques no backdrop
+  function handleBackdropClick(e) {
+    // Verifica se o clique foi diretamente no backdrop (não em seus filhos)
+    if (e.target === e.currentTarget) {
+      fecharModal();
+    }
+  }
+
   return (
-    <div className="criar-mensagem-container">
-      {!topico ? (
-        <>
-          <h4>Escolha o tópico para sua mensagem:</h4>
-          <BuscarTopicos onSelecionar={setTopico} />
-        </>
-      ) : (
-        <>
-          <div className="topico-selecionado">
-            <strong>Tópico selecionado:</strong> {topico.titulo}
-            <button
-              type="button"
-              onClick={() => setTopico(null)}
-              className="btn-trocar"
-            >
-              (trocar)
+    <>
+      <button
+        className="criar-mensagem-btn"
+        onClick={() => setModalAberto(true)}
+      >
+        Criar Mensagem
+      </button>
+      {modalAberto && (
+        <div className="modal-msg-backdrop" onClick={handleBackdropClick}>
+          <div className="modal-msg-conteudo">
+            <button className="modal-msg-fechar" onClick={fecharModal}>
+              ×
             </button>
+            <div className="criar-mensagem-container">
+              {!topico ? (
+                <>
+                  <h3>Escolha o tópico para sua mensagem:</h3>
+                  <BuscarTopicos onSelecionar={setTopico} />
+                  <h3>OU, crie um novo tópico para sua mensagem</h3>
+                  <CriarTopico
+                    onSucesso={(novoTopico) => {
+                      setTopico(novoTopico);
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="topico-selecionado">
+                    <strong>Tópico selecionado:</strong> {topico.titulo}
+                    <button
+                      type="button"
+                      onClick={() => setTopico(null)}
+                      className="btn-trocar"
+                    >
+                      (trocar)
+                    </button>
+                  </div>
+                  <form onSubmit={handleEnviar} className="form-mensagem">
+                    <textarea
+                      placeholder="Digite sua mensagem"
+                      value={conteudo}
+                      onChange={(e) => setConteudo(e.target.value)}
+                      required
+                      className="textarea-mensagem"
+                    />
+                    <br />
+                    <button
+                      type="submit"
+                      disabled={carregando || !conteudo}
+                      className="btn-enviar"
+                    >
+                      Enviar
+                    </button>
+                  </form>
+                  <p className="mensagem-status">{msg}</p>
+                </>
+              )}
+            </div>
           </div>
-          <form onSubmit={handleEnviar} className="form-mensagem">
-            <textarea
-              placeholder="Digite sua mensagem"
-              value={conteudo}
-              onChange={(e) => setConteudo(e.target.value)}
-              required
-              className="textarea-mensagem"
-            />
-            <br />
-            <button
-              type="submit"
-              disabled={carregando || !conteudo}
-              className="btn-enviar"
-            >
-              Enviar
-            </button>
-          </form>
-          <p className="mensagem-status">{msg}</p>
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 }
 

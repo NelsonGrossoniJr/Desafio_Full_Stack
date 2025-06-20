@@ -1,5 +1,5 @@
 .home-container {
-  max-width: 650px;
+  max-width: 700px;
   margin: 32px auto;
   padding: 32px 16px;
   background: #fafbfc;
@@ -8,6 +8,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: 100vh; /* Esta linha é importante para o layout fixo do logout */
+  position: relative; /* Para posicionar absoluto os botões do topo */
+  padding-top: 90px; /* Reserva espaço para os botões no topo */
 }
 
 .home-title {
@@ -19,6 +22,12 @@
   letter-spacing: 0.5px;
 }
 
+@media (max-width: 768px) {
+  .home-title {
+    margin-bottom: 0px;
+  }
+}
+
 .home-actions {
   display: flex;
   gap: 12px;
@@ -26,6 +35,54 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
+/* ------------ Adicionado para o NOVO LAYOUT --------------- */
+
+.home-actions-bar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  top: 32px;
+  right: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.home-actions-right {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  pointer-events: all;
+  justify-content: space-between;
+  flex-wrap: wrap; /* Permite que os itens pulem para a próxima linha */
+  row-gap: 12px; /* Espaçamento entre as linhas quando ocorre wrap */
+}
+
+.home-actions-conteudo {
+  display: flex;
+  gap: 10px; /* Espaçamento entre os botões */
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .home-actions-right {
+    justify-content: center; /* Centraliza os botões em telas menores */
+  }
+}
+.home-btn-logout {
+  background-color: #ea3131;
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  z-index: 1000;
+}
+
+.home-btn-logout:hover {
+  background-color: #a92121;
+}
+
+/* ------------ FIM DO ADICIONADO --------------- */
 
 .home-btn {
   padding: 10px 24px;
@@ -35,27 +92,4 @@
   font-weight: 500;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.18s;
-  outline: none;
-}
-
-.home-btn:hover:not(.home-btn-logout) {
-  background-color: #1857b1;
-}
-
-.home-btn-logout {
-  background-color: #ea3131;
-}
-
-.home-btn-logout:hover {
-  background-color: #a92121;
-}
-
-.home-listas {
-  width: 100%;
-  margin-top: 36px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
 }

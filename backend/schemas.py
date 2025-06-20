@@ -52,11 +52,21 @@ class MensagemBase(BaseModel):
 class MensagemCreate(MensagemBase):
     topico_id: int  # Ao criar, o usuário autenticado já está associado, só precisa informar o tópico
 
+# Novo schema para informações básicas do tópico
+class TopicoInfo(BaseModel):
+    id: int
+    titulo: str
+    categoria: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 class MensagemResponse(MensagemBase):
     id: int
     data_criacao: datetime
     usuario_id: int
     topico_id: int
+    topico: Optional[TopicoInfo] = None  # Adicionando informações do tópico
 
     class Config:
         from_attributes = True

@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session  
 from fastapi.middleware.cors import CORSMiddleware  
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, joinedload
 
 from . import models, schemas, auth, database
 
@@ -109,7 +110,7 @@ def buscar_topicos_por_titulo(query: str = Query(..., min_length=1), db: Session
     topicos = (
         db.query(models.Topico)
         .filter(models.Topico.titulo.ilike(f"%{query}%"))
-        .limit(10)  
+        .limit(8)  
         .all()
     )
     return topicos
@@ -125,7 +126,7 @@ def buscar_topicos_por_categoria(
     topicos = (
         db.query(models.Topico)
         .filter(models.Topico.categoria.ilike(f"%{query}%"))
-        .limit(10)  
+        .limit(8)  
         .all()
     )
     return topicos
@@ -159,7 +160,11 @@ def criar_mensagem(
 # --------------------------------------------------
 @app.get("/mensagens/", response_model=list[schemas.MensagemResponse])
 def listar_mensagens(db: Session = Depends(database.get_db)):
-    mensagens = db.query(models.Mensagem).all()
+    # Usando joinedload para carregar os relacionamentos de tópico
+    # e order_by para ordenar por data_criacao em ordem decrescente (mais recentes primeiro)
+    mensagens = db.query(models.Mensagem).options(
+        joinedload(models.Mensagem.topico)
+    ).order_by(models.Mensagem.data_criacao.desc()).all()
     return mensagens
 
 
